@@ -28,6 +28,35 @@ def load_deepfeat(split):
     y = d['label'].astype(int) if 'label' in d.files else None
     return X, y
 
+# ---------- emoticon feature transform ----------
+class EmoticonEncoder:
+    """Positional one-hot over the 13 emoji slots.
+    Vocabulary is learned from the training split only.
+    """
+    def __init__(self):
+        self.vocab = None            # emoji -> index
+        self.n_pos = 13
+
+    def fit(self, X):
+        chars = set()
+        for s in X:
+            chars.update(list(s))
+        self.vocab = {c: i for i, c in enumerate(sorted(chars))}
+        return self
+
+    def transform(self, X):
+        V = len(self.vocab)
+        out = np.zeros((len(X), self.n_pos * V), dtype=np.float32)
+        for r, s in enumerate(X):
+            for p, ch in enumerate(list(s)[:self.n_pos]):
+                j = self.vocab.get(ch)
+                if j is not None:
+                    out[r, p * V + j] = 1.0
+        return out
+
+    def fit_transform(self, X):
+        return self.fit(X).transform(X)
+
 # ---------- helpers ----------
 def prefix(X, y, frac):
     """First `frac` fraction of the data (rows are already in fixed order)."""
