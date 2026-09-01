@@ -57,6 +57,13 @@ class EmoticonEncoder:
     def fit_transform(self, X):
         return self.fit(X).transform(X)
 
+# ---------- deep-feature transforms ----------
+def deep_flatten(X):
+    return X.reshape(X.shape[0], -1)          # (N, 9984)
+
+def deep_meanpool(X):
+    return X.mean(axis=1)                      # (N, 768)
+
 # ---------- helpers ----------
 def prefix(X, y, frac):
     """First `frac` fraction of the data (rows are already in fixed order)."""
