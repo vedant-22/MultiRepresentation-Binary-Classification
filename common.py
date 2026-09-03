@@ -57,6 +57,28 @@ class EmoticonEncoder:
     def fit_transform(self, X):
         return self.fit(X).transform(X)
 
+# ---------- text-sequence feature transform ----------
+class SeqPositionalEncoder:
+    """Left-pad/truncate each digit string to a fixed length, then one-hot
+    each position over digits 0-9. 50*10 = 500 features."""
+    def __init__(self, length=50):
+        self.length = length
+    def fit(self, X):
+        return self
+    def _pad(self, s):
+        s = s[:self.length]
+        return s.rjust(self.length, '0')
+    def transform(self, X):
+        out = np.zeros((len(X), self.length * 10), dtype=np.float32)
+        for r, s in enumerate(X):
+            s = self._pad(s)
+            for p, ch in enumerate(s):
+                if ch.isdigit():
+                    out[r, p * 10 + int(ch)] = 1.0
+        return out
+    def fit_transform(self, X):
+        return self.fit(X).transform(X)
+
 # ---------- deep-feature transforms ----------
 def deep_flatten(X):
     return X.reshape(X.shape[0], -1)          # (N, 9984)
@@ -71,3 +93,7 @@ def prefix(X, y, frac):
     if isinstance(X, np.ndarray):
         return X[:n], y[:n]
     return X[:n], y[:n]
+
+def count_linear_params(clf, n_features):
+    """Trainable params of a linear classifier: weights + bias."""
+    return n_features + 1
